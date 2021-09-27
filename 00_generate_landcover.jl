@@ -37,3 +37,27 @@ plotlandscape(landcover, pts) = begin
     heatmap(landcover, c=:viridis, xticks=:none, yticks=:none, frame=:box, size=(500,500), colorbar=:none, aspectratio=1)
     scatter!(pts[:,1], pts[:,2], mc=:white, ms=5, msw=1, msc=:black, legend=:none)
 end
+
+plotproposal(landcover, pts, proposal) = begin
+    plt = heatmap(landcover, c=:GnBu_9, xticks=:none, yticks=:none, frame=:box, size=(750,750), dpi=140, colorbar=:none, aspectratio=1)
+
+    ind = collect(findall(x -> x==1, proposal))
+
+    for v in ind
+        x,y = v[1], v[2] # transpose to fit the heatmap
+        scatter!(plt, [x],[y], shape=:rect, mc=:orange, msw=0, ms=3, label="")
+    end
+    scatter!(plt, pts[:,1], pts[:,2], mc=:white, msc=:black, ms=5, label="")
+
+    plt
+end
+
+cov = makecover(dims=(100, 100), autocorrelation=0.8)
+pts = makepoints(cov)
+
+anim = @animate for i in 1:100
+    plotproposal(cov, pts, propose(GraphBasedOneRound(budget=25, points=pts, landcover=cov)))
+end
+
+gif(anim, "test.gif", fps=5)
+

@@ -171,9 +171,5 @@ end
 cov = makecover(dims=(100,100))
 pts = makepoints(cov)
 
-propgen = GraphBasedOneRound(budget=100,landcover=cov, points=pts)
+propgen = GraphBasedOneRound(budget=50,points=pts, landcover=cov)
 prop = propose(propgen)
-
-
-heatmap(prop', aspectratio=1, frame=:box, size=(500,500), colorbar=:none)
-scatter!(pts[:,1], pts[:,2], mc=:white, msc=:black, ms=5)
