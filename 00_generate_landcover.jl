@@ -1,6 +1,6 @@
 using NeutralLandscapes
 using Plots
-
+using Distributions 
 boundedval(val, upperbounds) = begin 
     val < upperbounds[1] && return 1
 
@@ -13,13 +13,13 @@ end
 discretize(landscape, numcategories=5) = map(i -> boundedval(i, [(1/numcategories)*j for j in 1:numcategories]), landscape)
 
 
-cover(;dims=(250,250), numcategories=10, autocorrelation=0.8) = discretize(rand(DiamondSquare(autocorrelation), dims), numcategories)
+makecover(;dims=(250,250), numcategories=10, autocorrelation=0.8) = discretize(rand(DiamondSquare(autocorrelation), dims), numcategories)
 
 
-points(n::Integer=25) = rand(n,2)
+makepoints(n::Integer=25) = rand(Uniform(0.1, 0.9), n,2)
 
-points(mat::Matrix{T}; n=25) where {T<:Integer} = begin
-    pts = points(n)
+makepoints(mat::Matrix{T}; n=25) where {T<:Integer} = begin
+    pts = makepoints(n)
     
     xscale = size(mat)[1]
     yscale = size(mat)[2]
