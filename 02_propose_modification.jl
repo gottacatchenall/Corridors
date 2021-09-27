@@ -1,5 +1,6 @@
 include("00_generate_landcover.jl")
 using Random
+using DataStructures
 landcover = makecover(autocorrelation=0.6, dims=(1000,1000))
 pts = makepoints(landcover)
 plotlandscape(landcover, pts)
@@ -34,7 +35,7 @@ function distancematrix(points)
             x,y = points[i,:] .- points[j,:]
             distmatrix[i,j] = sum(abs.([x,y]))
         else 
-            distmatrix[i,j] = 10^8
+            distmatrix[i,j] = 0
         end
     end
     distmatrix
@@ -42,11 +43,44 @@ end
 
 # TODO MST of the points, and then choose edges < budget 
 
+function getmst(distmatrix)
+    nvg = size(distmatrix)[1]
+
+    pq = PriorityQueue()
+    finished = zeros(Bool, nvg)
+
+    wt = fill(typemax(Int64), nvg) #Faster access time
+    parents = zeros(Int64, nvg)
+
+    pq[1] = typemin(Int64)
+    wt[1] = typemin(Int64)
+
+    while !isempty(pq)
+        v = dequeue!(pq)
+        finished[v] = true
+
+        for u in 1:nvg
+            if u != v
+                finished[u] && continue
+                
+                if wt[u] > distmatrix[u, v]
+                    wt[u] = distmatrix[u, v] 
+                    pq[u] = wt[u]
+                    parents[u] = v
+                end
+            end
+        end
+    end
+
+    return [(parents[i], i) for i in 1:nvg if parents[i] != 0]
+end
+
 function feasiblelist(distmatrix, budget) 
+    mst = getmst(distmatrix)
     feasiblelist = []
-    for i in 1:size(distmatrix)[1], j in 1:size(distmatrix)[2]
-        val = distmatrix[i,j] < budget && i != j 
-        val == true && push!(feasiblelist, (i,j))
+    for (i,j) in mst
+        val = distmatrix[i,j] < budget 
+        val && push!(feasiblelist, (i,j))
     end
     feasiblelist
 end
@@ -69,7 +103,7 @@ end
 GraphBasedOneRound(; 
     budget = 250, 
     landcover= makecover(), 
-    points= makepoints(landcover)) = GraphBasedOneRound(budget, landcover, points, distancematrix(points), feasiblelist(points, budget))
+    points= makepoints(landcover)) = GraphBasedOneRound(budget, landcover, points, distancematrix(points), feasiblelist(distancematrix(points), budget))
 
 function propose(gen::GraphBasedOneRound)
     landcover, points = gen.cover, gen.points 
@@ -134,12 +168,12 @@ end
 
 
 
-cov = makecover(dims=(500,500))
+cov = makecover(dims=(100,100))
 pts = makepoints(cov)
 
-propgen = GraphBasedOneRound(budget=500,landcover=cov, points=pts)
+propgen = GraphBasedOneRound(budget=100,landcover=cov, points=pts)
 prop = propose(propgen)
 
 
-heatmap(prop')
+heatmap(prop', aspectratio=1, frame=:box, size=(500,500), colorbar=:none)
 scatter!(pts[:,1], pts[:,2], mc=:white, msc=:black, ms=5)
