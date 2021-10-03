@@ -171,5 +171,5 @@ end
 cov = makecover(dims=(100,100))
 pts = makepoints(cov)
 
-propgen = GraphBasedOneRound(budget=50,points=pts, landcover=cov)
+propgen = GraphBasedOneRound(budget=50, points=pts, landcover=cov)
 prop = propose(propgen)

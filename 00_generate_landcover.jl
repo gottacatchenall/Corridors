@@ -1,6 +1,8 @@
 using NeutralLandscapes
 using Plots
 using Distributions 
+
+
 boundedval(val, upperbounds) = begin 
     val < upperbounds[1] && return 1
 
@@ -15,6 +17,8 @@ discretize(landscape, numcategories=5) = map(i -> boundedval(i, [(1/numcategorie
 
 makecover(;dims=(250,250), numcategories=10, autocorrelation=0.8) = discretize(rand(DiamondSquare(autocorrelation), dims), numcategories)
 
+
+makevoronoi(;dims=(250,250), numcategories=10) = discretize(rand(NearestNeighborElement(dims[1]), dims), numcategories)
 
 makepoints(n::Integer=25) = rand(Uniform(0.1, 0.9), n,2)
 
@@ -51,13 +55,4 @@ plotproposal(landcover, pts, proposal) = begin
 
     plt
 end
-
-cov = makecover(dims=(100, 100), autocorrelation=0.8)
-pts = makepoints(cov)
-
-anim = @animate for i in 1:100
-    plotproposal(cov, pts, propose(GraphBasedOneRound(budget=25, points=pts, landcover=cov)))
-end
-
-gif(anim, "test.gif", fps=5)
 
